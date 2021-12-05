@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 const redis = createClient();
 const io = new Server();
+const playersAPI = 'https://www.balldontlie.io/api/v1/players';
 // make all redis methods a Promise based.
 bluebird.promisifyAll(redis);
 redis.connect().then(() => console.log('redis is connected.'));
@@ -28,9 +29,7 @@ app.get('/player', async (req, res) => {
         const playerCache = await redis.get(playerRecord.id.toString());
         if (playerCache !== null) return JSON.parse(playerCache) as Player;
         const playerData = (
-          await axios.get<Player>(
-            `https://www.balldontlie.io/api/v1/players/${playerRecord.id}`
-          )
+          await axios.get<Player>(`${playersAPI}/${playerRecord.id}`)
         ).data;
         await redis.set(playerData.id.toString(), JSON.stringify(playerData));
         return playerData;
@@ -50,15 +49,12 @@ app.get('/player', async (req, res) => {
 });
 //Update cache data every 15 minutes
 //if data has been changed in the 3rd party api or never been cached before.
-cron.schedule('* 15 * * *', async () => {
+cron.schedule('*/15 * * * *', async () => {
   const playersMinimalData = await givenCsvData();
   const players = await Promise.all(
     playersMinimalData.map(async (minimalPlayerData) => {
-      return (
-        await axios.get<Player>(
-          `https://www.balldontlie.io/api/v1/players/${minimalPlayerData.ID}`
-        )
-      ).data;
+      return (await axios.get<Player>(`${playersAPI}/${minimalPlayerData.id}`))
+        .data;
     })
   );
   players.forEach(async (player) => {

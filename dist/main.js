@@ -62,6 +62,7 @@ var PORT = process.env.PORT || 3000;
 var app = express_1.default();
 var redis = redis_1.createClient();
 var io = new socket_io_1.Server();
+var playersAPI = 'https://www.balldontlie.io/api/v1/players';
 // make all redis methods a Promise based.
 bluebird_1.default.promisifyAll(redis);
 redis.connect().then(function () { return console.log('redis is connected.'); });
@@ -83,12 +84,12 @@ app.get('/player', function (req, res) { return __awaiter(void 0, void 0, void 0
                         var playerCache, playerData;
                         return __generator(this, function (_a) {
                             switch (_a.label) {
-                                case 0: return [4 /*yield*/, redis.get(playerRecord.ID.toString())];
+                                case 0: return [4 /*yield*/, redis.get(playerRecord.id.toString())];
                                 case 1:
                                     playerCache = _a.sent();
                                     if (playerCache !== null)
                                         return [2 /*return*/, JSON.parse(playerCache)];
-                                    return [4 /*yield*/, axios_1.default.get("https://www.balldontlie.io/api/v1/players/" + playerRecord.ID)];
+                                    return [4 /*yield*/, axios_1.default.get(playersAPI + "/" + playerRecord.id)];
                                 case 2:
                                     playerData = (_a.sent()).data;
                                     return [4 /*yield*/, redis.set(playerData.id.toString(), JSON.stringify(playerData))];
@@ -116,7 +117,7 @@ app.get('/player', function (req, res) { return __awaiter(void 0, void 0, void 0
 }); });
 //Update cache data every 15 minutes
 //if data has been changed in the 3rd party api or never been cached before.
-node_cron_1.default.schedule('* 15 * * *', function () { return __awaiter(void 0, void 0, void 0, function () {
+node_cron_1.default.schedule('*/15 * * * *', function () { return __awaiter(void 0, void 0, void 0, function () {
     var playersMinimalData, players;
     return __generator(this, function (_a) {
         switch (_a.label) {
@@ -126,8 +127,9 @@ node_cron_1.default.schedule('* 15 * * *', function () { return __awaiter(void 0
                 return [4 /*yield*/, Promise.all(playersMinimalData.map(function (minimalPlayerData) { return __awaiter(void 0, void 0, void 0, function () {
                         return __generator(this, function (_a) {
                             switch (_a.label) {
-                                case 0: return [4 /*yield*/, axios_1.default.get("https://www.balldontlie.io/api/v1/players/" + minimalPlayerData.ID)];
-                                case 1: return [2 /*return*/, (_a.sent()).data];
+                                case 0: return [4 /*yield*/, axios_1.default.get(playersAPI + "/" + minimalPlayerData.id)];
+                                case 1: return [2 /*return*/, (_a.sent())
+                                        .data];
                             }
                         });
                     }); }))];

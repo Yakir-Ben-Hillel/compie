@@ -52,7 +52,7 @@ var givenCsvData = function () { return __awaiter(void 0, void 0, void 0, functi
                 data = papaparse_1.default.parse(playersFile, { header: false }).data.slice(1);
                 playersMinimalData = data.map(function (row) {
                     var player = {
-                        ID: row[0],
+                        id: row[0],
                         name: row[1],
                     };
                     return player;
